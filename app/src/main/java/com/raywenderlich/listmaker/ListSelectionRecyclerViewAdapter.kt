@@ -2,12 +2,19 @@ package com.raywenderlich.listmaker
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import android.widget.ExpandableListView
 import androidx.recyclerview.widget.RecyclerView
 
 // The customized adapter should extend the built-in abstract class
 // With implementing all needed methods.
-class ListSelectionRecyclerViewAdapter(private val lists: ArrayList<TaskList>):
+class ListSelectionRecyclerViewAdapter(private val lists: ArrayList<TaskList>,
+    val clickListener: ListSelectionRecyclerViewClickListener):
     RecyclerView.Adapter<ListSelectionViewHolder>() {
+
+    // Create a new interface: listen to the click on a item.
+    interface ListSelectionRecyclerViewClickListener {
+        fun listItemClicked(list: TaskList)
+    }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int):
             ListSelectionViewHolder {
@@ -30,6 +37,10 @@ class ListSelectionRecyclerViewAdapter(private val lists: ArrayList<TaskList>):
     override fun onBindViewHolder(holder: ListSelectionViewHolder, position: Int) {
         holder.listPosition.text = (position + 1).toString()
         holder.listTitle.text = lists[position].name
+        // Add an onClickListener to the view of itemHolder
+        holder.itemView.setOnClickListener {
+            clickListener.listItemClicked(lists[position])
+        }
     }
 
     fun addList(list: TaskList) {

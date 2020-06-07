@@ -12,4 +12,7 @@
     <!-- String for creating list dialog -->
     <string name="name_of_list">What is the name of the list</string>
     <string name="create_list">Create</string>
+    <!-- String for adding task to list -->
+    <string name="task_to_add">Add a Task</string>
+    <string name="add_task">Add</string>
 </resources>

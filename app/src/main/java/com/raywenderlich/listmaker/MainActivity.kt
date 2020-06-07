@@ -1,5 +1,7 @@
 package com.raywenderlich.listmaker
 
+import android.app.Activity
+import android.content.Intent
 import android.os.Bundle
 import android.text.InputType
 import com.google.android.material.floatingactionbutton.FloatingActionButton
@@ -12,7 +14,8 @@ import androidx.appcompat.app.AlertDialog
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(),
+    ListSelectionRecyclerViewAdapter.ListSelectionRecyclerViewClickListener {
 
     lateinit var listsRecyclerView: RecyclerView
     // Initiate the shared Preference as soon as the activity is created.
@@ -35,7 +38,7 @@ class MainActivity : AppCompatActivity() {
         // Passing the activity for the layout manager to access the context.
         listsRecyclerView.layoutManager = LinearLayoutManager(this)
         // Bind an adapter to the RecyclerView, by creating a customized adapter.
-        listsRecyclerView.adapter = ListSelectionRecyclerViewAdapter(lists)
+        listsRecyclerView.adapter = ListSelectionRecyclerViewAdapter(lists, this)
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -52,6 +55,25 @@ class MainActivity : AppCompatActivity() {
             R.id.action_settings -> true
             else -> super.onOptionsItemSelected(item)
         }
+    }
+
+    // In order to deal with the returned result.
+    // Override this method for receiving the result of any activities it starts.
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+
+        // When backing from the showListDetail activity.
+        if (requestCode == LIST_DETAIL_REQUEST_CODE && resultCode == Activity.RESULT_OK) {
+            data?.let {
+                listDataManager.saveList(data.getParcelableExtra(INTENT_LIST_KEY))
+                updateLists()
+            }
+        }
+    }
+
+    private fun updateLists() {
+        val lists = listDataManager.readLists()
+        listsRecyclerView.adapter = ListSelectionRecyclerViewAdapter(lists, this)
     }
 
     private fun showCreateListDialog() {
@@ -81,8 +103,35 @@ class MainActivity : AppCompatActivity() {
                         ListSelectionRecyclerViewAdapter
                 recyclerAdapter.addList(list)
                 dialog.dismiss()
+                // list: a list of task.
+                showListDetail(list)
         }
         // Construct and display the dialog.
         builder.create().show()
+    }
+
+    private fun showListDetail(list: TaskList) {
+        // Create an Intent and pass in the current activity and
+        // the class of the activity to be shown
+        val listDetailIntent = Intent(this, ListDetailActivity::class.java)
+        // Extras are keys associated with values that provides intents to give
+        // more information to the receiver about the action to be done.
+        // INTENT_LIST_KEY: a string of the receiver of the intent to reference the list.
+        // a list is to be displayed.
+        listDetailIntent.putExtra(INTENT_LIST_KEY, list)
+
+        // Starts the activity
+        // and it may hear back from the activity when it finishes and removes itself from the screen.
+        // In this case, we want to hear back the list passing to the activity.
+        startActivityForResult(listDetailIntent, LIST_DETAIL_REQUEST_CODE)
+    }
+
+    override fun listItemClicked(list: TaskList) {
+        showListDetail(list)
+    }
+    // Define the key value for intent list.
+    companion object {
+        const val INTENT_LIST_KEY = "list"
+        const val LIST_DETAIL_REQUEST_CODE = 123
     }
 }
